@@ -2,6 +2,45 @@
 
 Aplikasi chat Flutter untuk Android dan iOS dengan REST API + WebSocket Go, PostgreSQL, dan Docker Compose. Desain mengikuti konsep materi Pertemuan 5 dan 6: daftar percakapan, balon asimetris, input responsif, reply, media, status baca, dan tema adaptif. File presentasi hanya digunakan sebagai referensi materi.
 
+## Screenshot aplikasi mobile
+
+Screenshot diambil dari antarmuka aplikasi pada emulator Android. Akun, pesan, dan lampiran menggunakan data contoh di backend pengujian. Klik gambar untuk melihat ukuran penuh.
+
+| Masuk | Daftar akun |
+| :---: | :---: |
+| <a href="docs/screenshots/01-login.png"><img src="docs/screenshots/01-login.png" width="260" alt="Screenshot Masuk Ruang Chat"></a> | <a href="docs/screenshots/02-register.png"><img src="docs/screenshots/02-register.png" width="260" alt="Screenshot Daftar akun Ruang Chat"></a> |
+| Login menggunakan email dan password, dengan akses ke pendaftaran akun. | Form nama, email, dan password untuk membuat akun baru. |
+
+| Pengaturan server | Daftar percakapan |
+| :---: | :---: |
+| <a href="docs/screenshots/03-server-settings.png"><img src="docs/screenshots/03-server-settings.png" width="260" alt="Screenshot Pengaturan server Ruang Chat"></a> | <a href="docs/screenshots/04-conversations.png"><img src="docs/screenshots/04-conversations.png" width="260" alt="Screenshot Daftar percakapan Ruang Chat"></a> |
+| Atur alamat API untuk emulator atau ponsel pada jaringan lokal. | Lihat kontak, ringkasan pesan, waktu terakhir, serta jumlah pesan belum dibaca. |
+
+| Chat baru | Profil & preferensi |
+| :---: | :---: |
+| <a href="docs/screenshots/05-new-chat.png"><img src="docs/screenshots/05-new-chat.png" width="260" alt="Screenshot Chat baru Ruang Chat"></a> | <a href="docs/screenshots/06-profile.png"><img src="docs/screenshots/06-profile.png" width="260" alt="Screenshot Profil & preferensi Ruang Chat"></a> |
+| Cari pengguna yang sudah terdaftar dan mulai percakapan pribadi. | Lihat profil sendiri, pilih tema sistem/terang/gelap, dan keluar dari akun. |
+
+| Ruang chat | Tema gelap |
+| :---: | :---: |
+| <a href="docs/screenshots/07-chat.png"><img src="docs/screenshots/07-chat.png" width="260" alt="Screenshot Ruang chat Ruang Chat"></a> | <a href="docs/screenshots/08-chat-dark.png"><img src="docs/screenshots/08-chat-dark.png" width="260" alt="Screenshot Tema gelap Ruang Chat"></a> |
+| Percakapan dengan teks, gambar, kutipan balasan, reaksi, dan status baca. | Tampilan percakapan yang menyesuaikan pilihan tema gelap. |
+
+| Info kontak | Penampil gambar |
+| :---: | :---: |
+| <a href="docs/screenshots/09-contact.png"><img src="docs/screenshots/09-contact.png" width="260" alt="Screenshot Info kontak Ruang Chat"></a> | <a href="docs/screenshots/10-image-viewer.png"><img src="docs/screenshots/10-image-viewer.png" width="260" alt="Screenshot Penampil gambar Ruang Chat"></a> |
+| Lihat identitas dan status kontak, beserta petunjuk balasan dan reaksi. | Buka gambar dari percakapan dalam tampilan penuh dengan dukungan zoom. |
+
+| Menu lampiran | Reaksi pesan |
+| :---: | :---: |
+| <a href="docs/screenshots/11-attachments.png"><img src="docs/screenshots/11-attachments.png" width="260" alt="Screenshot Menu lampiran Ruang Chat"></a> | <a href="docs/screenshots/12-reactions.png"><img src="docs/screenshots/12-reactions.png" width="260" alt="Screenshot Reaksi pesan Ruang Chat"></a> |
+| Pilih galeri, kamera, atau dokumen untuk dibagikan ke percakapan. | Tekan lama pesan untuk memilih emoji reaksi atau membalas pesan. |
+
+| Pratinjau balasan | Pencarian pesan |
+| :---: | :---: |
+| <a href="docs/screenshots/13-reply.png"><img src="docs/screenshots/13-reply.png" width="260" alt="Screenshot Pratinjau balasan Ruang Chat"></a> | <a href="docs/screenshots/14-search.png"><img src="docs/screenshots/14-search.png" width="260" alt="Screenshot Pencarian pesan Ruang Chat"></a> |
+| Periksa kutipan pesan di atas kolom ketik sebelum mengirim balasan. | Cari kata kunci pada riwayat percakapan yang sudah dimuat. |
+
 ## Software yang perlu diinstal
 
 Untuk menjalankan aplikasi Android beserta backend, siapkan **Git, Flutter SDK, Docker, dan Android Studio beserta Android SDK**. Versi acuan proyek adalah Flutter **3.47.5** dengan Dart **3.13.4**, serta Go **1.25+**. Batas Dart pada proyek adalah `^3.13.4`; gunakan Flutter 3.47.5 agar sama dengan konfigurasi CI.
@@ -211,7 +250,9 @@ mobile/
   lib/widgets/          Tema, avatar, pesan, lampiran
 docs/api.md             Kontrak REST dan event WebSocket
 docs/openapi.json       Kontrak HTTP yang dapat diimpor ke Postman
+docs/screenshots/       Screenshot setiap halaman dan panel aplikasi mobile
 scripts/test-backend.sh Tes dengan PostgreSQL sementara terisolasi
+scripts/capture-screenshots.sh Mengambil ulang screenshot untuk README
 compose.yaml            API + PostgreSQL dengan healthcheck dan volume
 ```
 
@@ -233,6 +274,18 @@ Untuk tes Android end-to-end, nyalakan emulator lalu jalankan dari root:
 ```
 
 Script ini memakai backend dan volume sementara terpisah pada port 18081, lalu menghapusnya setelah tes. Screenshot tema terang/gelap disimpan di `.artifacts/screenshots`. Setelah tes, pasang kembali aplikasi normal dengan `cd mobile && flutter run -d emulator-5554` karena APK tes memakai entrypoint dan alamat server pengujian.
+
+Untuk mengambil ulang seluruh screenshot pada README, nyalakan emulator Android dan jalankan:
+
+```bash
+./scripts/capture-screenshots.sh emulator-5554
+```
+
+Hasil PNG disimpan pada `docs/screenshots/` dan ikut dikelola oleh Git. Script memakai halaman aplikasi asli, membuat data contoh di backend sementara, dan memeriksa navigasi setiap halaman saat pengambilan gambar. Pengaturan serta sesi login yang tersimpan di perangkat tidak digunakan oleh skenario screenshot. Setelah selesai, jalankan kembali aplikasi utama:
+
+```bash
+(cd mobile && flutter run -d emulator-5554 --target lib/main.dart)
+```
 
 `scripts/test-backend.sh` membuat database sementara pada port acak localhost dan menghapus containernya setelah tes. Database aplikasi tidak diubah. Tes mencakup autentikasi, idempotensi, WebSocket, baca, reaksi, lampiran, penolakan akses pihak ketiga, kutipan lintas percakapan, serta cursor pagination. Tanpa `TEST_DATABASE_URL`, `go test ./...` melewati tes integrasi. CI menjalankan tes Go dengan race detector dan pemeriksaan Flutter.
 
