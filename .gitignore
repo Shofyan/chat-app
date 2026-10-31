@@ -1,0 +1,7 @@
+.env
+.DS_Store
+backend/server
+backend/*.test
+backend/coverage*
+.artifacts/
+node_modules/
