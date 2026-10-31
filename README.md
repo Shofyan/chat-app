@@ -2,9 +2,125 @@
 
 Aplikasi chat Flutter untuk Android dan iOS dengan REST API + WebSocket Go, PostgreSQL, dan Docker Compose. Desain mengikuti konsep materi Pertemuan 5 dan 6: daftar percakapan, balon asimetris, input responsif, reply, media, status baca, dan tema adaptif. File presentasi hanya digunakan sebagai referensi materi.
 
+## Software yang perlu diinstal
+
+Untuk menjalankan aplikasi Android beserta backend, siapkan **Git, Flutter SDK, Docker, dan Android Studio beserta Android SDK**. Versi acuan proyek adalah Flutter **3.47.5** dengan Dart **3.13.4**, serta Go **1.25+**. Batas Dart pada proyek adalah `^3.13.4`; gunakan Flutter 3.47.5 agar sama dengan konfigurasi CI.
+
+| Software | Kapan diperlukan | Fungsi dan cara mendapatkan |
+| --- | --- | --- |
+| [Git](https://git-scm.com/downloads) | Untuk clone dan mengelola kode | Mengunduh repositori, membuat commit, serta melakukan pull/push ke GitHub. |
+| [Flutter SDK](https://docs.flutter.dev/install) | Untuk menjalankan, mengembangkan, atau build aplikasi | Menyediakan perintah `flutter` beserta Dart SDK. Tambahkan folder `flutter/bin` ke `PATH`; versi acuan dapat diunduh dari [arsip Flutter](https://docs.flutter.dev/install/archive). |
+| [Docker Desktop](https://docs.docker.com/get-started/get-docker/) | Untuk menjalankan backend dan database | Docker Desktop menyediakan Docker Engine, CLI, dan Compose. Pada Linux, alternatifnya Docker Engine dengan [plugin Compose](https://docs.docker.com/compose/install/). |
+| [Android Studio dan Android SDK](https://docs.flutter.dev/platform-integration/android/setup) | Untuk target Android | Menyediakan SDK Manager, Android Emulator, dan tool build Android. Flutter SDK tetap perlu dipasang meskipun plugin Flutter di editor sudah terpasang. |
+| JDK dari Android Studio | Untuk build Android | Flutter dapat memakai Java yang disertakan Android Studio. Lokasi dan versinya ditampilkan oleh `flutter doctor -v`. |
+| [Xcode dan iOS Simulator](https://docs.flutter.dev/platform-integration/ios/setup) | Untuk target iOS, pada macOS | Menyediakan compiler, SDK iOS, simulator, dan pengaturan signing untuk perangkat fisik. |
+| [CocoaPods](https://guides.cocoapods.org/using/getting-started.html) | Jika plugin iOS menggunakan CocoaPods | Mengelola dependency native iOS yang memakai Pods; ikuti hasil pemeriksaan Flutter untuk setup iOS. |
+
+Dart SDK ikut terpasang bersama Flutter. PostgreSQL 17 serta toolchain Go untuk build backend disediakan oleh image Docker proyek. Package aplikasi dan backend diunduh melalui pengelola dependency pada langkah berikutnya.
+
+### Menyiapkan Flutter dan Docker
+
+1. Instal Flutter SDK sesuai sistem operasi, lalu tambahkan direktori `flutter/bin` ke `PATH` mengikuti [panduan instalasi Flutter](https://docs.flutter.dev/install).
+2. Instal Docker Desktop, buka aplikasinya, dan tunggu sampai Docker Engine berjalan. Pada Linux dengan Docker Engine, jalankan layanan Docker dan pastikan plugin Compose tersedia.
+3. Buka terminal baru agar perubahan `PATH` terbaca, kemudian periksa:
+
+```bash
+git --version
+flutter --version
+dart --version
+docker --version
+docker compose version
+docker info
+flutter doctor -v
+```
+
+`docker info` memastikan terminal dapat terhubung ke Engine. `flutter doctor -v` menunjukkan komponen pengembangan yang sudah siap atau masih perlu dilengkapi. Lengkapi komponen sesuai target: Android untuk APK, atau Xcode/iOS untuk aplikasi iPhone.
+
+### Menyiapkan Android
+
+1. Instal dan buka Android Studio.
+2. Buka **SDK Manager** dari **More Actions** pada halaman awal, atau **Tools > SDK Manager** ketika proyek terbuka.
+3. Pada **SDK Platforms**, instal Android SDK Platform sesuai kebutuhan Flutter/Gradle. Gradle dapat meminta versi tambahan ketika build pertama kali dijalankan.
+4. Pada **SDK Tools**, pasang Android SDK Build-Tools, Command-line Tools, Platform-Tools, Android Emulator, CMake, dan NDK (Side by side). Lihat [panduan Android Flutter](https://docs.flutter.dev/platform-integration/android/setup) untuk konfigurasi sesuai sistem operasi.
+5. Buka **Device Manager**, buat perangkat virtual, pilih system image yang sesuai arsitektur komputer, lalu nyalakan emulator. Untuk perangkat fisik, aktifkan Developer Options dan USB debugging, lalu sambungkan melalui USB.
+6. Tinjau lisensi SDK dan periksa perangkat:
+
+```bash
+flutter doctor --android-licenses
+flutter doctor -v
+flutter devices
+```
+
+Selesaikan persetujuan lisensi yang diperlukan, lalu pastikan bagian Android toolchain siap dan emulator/perangkat muncul pada `flutter devices`.
+
+### Menyiapkan iOS di macOS
+
+Instal Xcode, buka untuk menyelesaikan setup awal dan meninjau lisensinya, lalu unduh runtime iOS Simulator. Siapkan CocoaPods bila dependency native memerlukannya. Ikuti [panduan setup iOS Flutter](https://docs.flutter.dev/platform-integration/ios/setup), kemudian periksa kembali dengan `flutter doctor -v` dan `flutter devices`. Untuk iPhone fisik, atur akun Apple dan signing melalui Xcode.
+
+### Software tambahan sesuai kebutuhan
+
+| Software | Kegunaan |
+| --- | --- |
+| [Go SDK 1.25+](https://go.dev/doc/install) | Menjalankan perintah Go di komputer, mengembangkan backend, serta menjalankan `scripts/test-backend.sh` dan `make test`. Untuk menjalankan backend melalui Docker, Go sudah tersedia di tahap build container. |
+| Editor seperti VS Code dengan ekstensi Flutter/Dart, atau Android Studio dengan plugin Flutter | Menulis kode, menjalankan debugger, dan memakai bantuan editor. |
+| Chrome | Menjalankan versi web menggunakan `flutter run -d chrome --web-port 3000`. |
+| Bash dan Make | Menjalankan script `.sh` dan perintah singkat pada `Makefile`. Gunakan Bash yang kompatibel, misalnya melalui WSL pada Windows; perintah Flutter dan Docker juga dapat dijalankan langsung. |
+| Python 3 dan librsvg (`rsvg-convert`) | Menghasilkan ulang ikon dari `mobile/branding/ruang.svg` dengan `python3 scripts/generate-icons.py`. Ikon hasil render sudah ada di repositori. |
+
+Jika memasang Go untuk pengembangan atau tes, pastikan `go version` dapat dijalankan dari terminal.
+
+## Mengunduh proyek dan memasang dependency
+
+Clone repositori private menggunakan akun GitHub yang memiliki akses:
+
+```bash
+git clone https://github.com/Shofyan/chat-app.git
+cd chat-app
+```
+
+Jika kode sudah ada di komputer, buka terminal pada folder `chat-app`. Seluruh perintah berikut diasumsikan dijalankan dari folder tersebut, kecuali ada langkah `cd` yang disebutkan.
+
+### Dependency Flutter
+
+```bash
+(cd mobile && flutter pub get)
+```
+
+Perintah ini mengunduh package yang tercatat di `mobile/pubspec.yaml`; `mobile/pubspec.lock` menyimpan versi yang digunakan aplikasi.
+
+| Package langsung | Fungsi |
+| --- | --- |
+| `flutter` dan `cupertino_icons` | Framework UI dan kumpulan ikon bergaya iOS. |
+| `http` | Mengakses REST API Go. |
+| `web_socket_channel` | Menerima event chat real-time dan mengirim indikator mengetik. |
+| `flutter_secure_storage` | Menyimpan token sesi pada perangkat. |
+| `image_picker` | Memilih foto dari galeri atau kamera. |
+| `file_picker` | Memilih dan menyimpan lampiran. |
+| `shared_preferences` | Menyimpan pilihan tema dan alamat server. |
+| `uuid` | Membuat `client_id` unik untuk pengiriman pesan. |
+| `flutter_test`, `integration_test`, dan `flutter_lints` | Tes widget, tes perangkat, dan pemeriksaan kualitas kode saat pengembangan. |
+
+### Dependency backend dan database
+
+Saat menjalankan `docker compose up -d --build --wait`, Docker mengunduh image PostgreSQL `17-alpine`, image build Go `1.25-alpine`, dan image runtime Alpine `3.22`. Tahap build menjalankan `go mod download` untuk memasang library backend:
+
+| Library langsung | Fungsi |
+| --- | --- |
+| `github.com/coder/websocket` | Koneksi dan event WebSocket. |
+| `github.com/jackc/pgx/v5` | Driver koneksi PostgreSQL. |
+| `golang.org/x/crypto` | Hash password menggunakan bcrypt. |
+
+Versi library dan dependency turunannya tercatat pada `backend/go.mod` dan `backend/go.sum`. Jika mengembangkan backend memakai Go di komputer, unduh dependency dengan:
+
+```bash
+(cd backend && go mod download)
+```
+
+Database untuk aplikasi dibuat dan dikelola oleh service `db` pada Compose. Instalasi awal memerlukan koneksi internet untuk mengunduh SDK, package, image Docker, serta dependency build Android/iOS.
+
 ## Menjalankan backend
 
-Prasyarat: Docker dengan Compose. Flutter 3.47.5 / Dart 3.13+ untuk aplikasi, Go 1.25+ untuk pengembangan backend.
+Pastikan Docker Engine berjalan dan `docker compose version` berhasil. Flutter diperlukan untuk aplikasi mobile; Go di komputer diperlukan bila menjalankan perintah pengembangan atau tes backend secara lokal.
 
 ```bash
 # Dari folder chat-app. .env opsional, nilai lokal sudah tersedia.
