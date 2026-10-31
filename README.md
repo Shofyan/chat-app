@@ -168,7 +168,17 @@ docker compose up -d --build --wait
 curl http://localhost:8080/health
 ```
 
-API tersedia di port 8080. PostgreSQL hanya diakses dari jaringan Docker dan disimpan pada volume `ruang-chat_postgres_data`. Skema dibuat otomatis saat backend dimulai. `docker compose down` menghentikan layanan tanpa menghapus data. Mengubah password database di `.env` tidak mengubah password pada volume yang sudah diinisialisasi.
+API tersedia di port 8080. PostgreSQL tersedia pada `127.0.0.1:5432` di komputer lokal dan disimpan pada volume `ruang-chat_postgres_data`. Port lokal dapat diubah melalui `POSTGRES_PORT` di `.env`. Skema dibuat otomatis saat backend dimulai. `docker compose down` menghentikan layanan tanpa menghapus data. Mengubah password database di `.env` tidak mengubah password pada volume yang sudah diinisialisasi.
+
+### Koneksi DBeaver
+
+Pilih koneksi **PostgreSQL** di DBeaver dan gunakan JDBC URL berikut:
+
+```text
+jdbc:postgresql://127.0.0.1:5432/chat?sslmode=disable
+```
+
+Gunakan username `chat` dan password dari `POSTGRES_PASSWORD` di `.env` (default lokal: `chat_local_password`), lalu klik **Test Connection**. Jika `POSTGRES_PORT` diubah, sesuaikan port pada URL.
 
 ## Menjalankan aplikasi mobile
 
@@ -221,7 +231,9 @@ cd mobile
 flutter run -d chrome --web-port 3000
 ```
 
-Origin web lokal port 3000 sudah diizinkan. Untuk origin lain, tambahkan URL lengkapnya ke `ALLOWED_ORIGINS` lalu recreate container API. Penyimpanan sesi web memerlukan localhost atau HTTPS.
+Origin web lokal port 3000 sudah diizinkan. Di VS Code, pilih konfigurasi **Ruang Chat - Chrome** pada **Run and Debug** agar aplikasi selalu menggunakan port 3000 dan backend `http://localhost:8080`. Pastikan port 3000 tersedia sebelum menjalankan sesi debug.
+
+Jika Chrome menampilkan "Server belum terhubung" sementara `http://localhost:8080/health` berhasil dibuka, periksa port halaman Flutter pada address bar. Origin lain, termasuk port acak dari `flutter run -d chrome`, perlu ditambahkan sebagai URL lengkap ke `ALLOWED_ORIGINS` di `.env`, lalu terapkan dengan `docker compose up -d --no-deps --wait api`. Pada pengaturan alamat server aplikasi web, gunakan URL dasar `http://localhost:8080`. Penyimpanan sesi web memerlukan localhost atau HTTPS.
 
 ## Fitur
 
